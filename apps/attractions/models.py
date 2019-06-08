@@ -7,7 +7,7 @@ from django.conf import settings
 from django.dispatch import receiver
 from .utils import geocode
 from ..django.middlewares import get_current_user
-from django.contrib.gis.db import models as geo_models
+from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
 
@@ -96,7 +96,8 @@ class Attraction(ManagementMixin):
         blank=True,
     )
 
-    point = geo_models.PointField(
+    point = models.PointField(
+        geography=True,
         null=True,
         blank=True,
     )
@@ -165,7 +166,8 @@ class Attraction(ManagementMixin):
     @classmethod
     def search(cls, tags, point):
         print(point)
-        return cls.objects.filter(point__distance_lt=(point, Distance(km=100)))
+        print(cls.objects.filter(point__isnull=False).first().point)
+        return cls.objects.filter(point__distance_lte=(point, Distance(km=3)))
 
     def __str__(self):
         return self.name
@@ -179,7 +181,3 @@ def get_coord(sender, instance, added=False, **kwargs):
         instance.point = Point(float(x), float(y))
     except Exception as e:
         print(e)
-
-    # if res and len(res) > 0 and res[0].get('location'):
-    #     instance.coor_x = res[0]['location'].get('lat')
-    #     instance.coor_y = res[0]['location'].get('lng')

@@ -22,7 +22,7 @@ class AttractionViewset(viewsets.ModelViewSet):
 
     def get_queryset(self):
         tags = Tag.objects.filter(id__in=[int(x) for x in self.request.GET.getlist('tag')])
-        return Attraction.search(tags=tags, point=Point(60.004532, 30.43344))
+        return Attraction.search(tags=tags, point=Point(30.43344, 60.004532))
 
 
     @action(detail=True, methods=["GET"])
