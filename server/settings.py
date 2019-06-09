@@ -58,7 +58,7 @@ ROOT_URLCONF = 'server.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -72,7 +72,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'server.wsgi.application'
-
+DATABASE_ROUTERS = ['server.dbrouter.DBRouter',]
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -80,6 +80,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'digital_br',
+        'USER': 'postgres',
+        'HOST': 'localhost',
+    },
+    'routing': {
+        'NAME': 'routing',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'USER': 'postgres',
         'HOST': 'localhost',
     }
@@ -141,4 +147,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-GOOGLE_MAP_KEY = "AIzaSyB67B8i72gqXYmSph5t8KQKkh2dfz-RJt4"
+YANDEX_API_KEY = ""
+
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass

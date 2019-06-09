@@ -1,10 +1,11 @@
 import requests
+from django.conf import settings
 
 def geocode(address):
     print(address)
     r = requests.get("https://geocode-maps.yandex.ru/1.x", params={
         "geocode": address,
-        "apikey": "6fcc7358-c699-490c-827b-621db017f699",
+        "apikey": settings.YANDEX_API_KEY,
         "format": "json"
     })
     r.raise_for_status()

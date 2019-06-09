@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Webview</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey={{ YANDEX_API_KEY }}" type="text/javascript"></script>
+	<style>
+        html, body, #map {
+            width: 100%; height: 100%; padding: 0; margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+<div id="map"></div>
+</body>
+ <script type="text/javascript">
+        function init() {
+{% for attraction in attractions %}
+                    console.log([{{ attraction.point.y }}, {{ attraction.point.x }}]);
+                {% endfor %}
+
+    // Задаём точки мультимаршрута.
+        var pointA = [55.749, 37.524],
+            pointB = "Москва, Красная площадь",
+            /**
+             * Создаем мультимаршрут.
+             * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/multiRouter.MultiRoute.xml
+             */
+            multiRoute = new ymaps.multiRouter.MultiRoute({
+                referencePoints: [
+                    [{{ start_pos.y }}, {{ start_pos.x }}],
+        {% for attraction in attractions %}
+                    [{{ attraction.point.y }}, {{ attraction.point.x }}],
+                {% endfor %}
+                ],
+                params: {
+                    //Тип маршрутизации - пешеходная маршрутизация.
+                    routingMode: 'pedestrian'
+                }
+            }, {
+                // Автоматически устанавливать границы карты так, чтобы маршрут был виден целиком.
+                boundsAutoApply: true
+            });
+
+        // Создаем карту с добавленной на нее кнопкой.
+        var myMap = new ymaps.Map('map', {
+            center: [55.739625, 37.54120],
+            zoom: 12
+        }, {
+            buttonMaxWidth: 300
+        });
+
+        // Добавляем мультимаршрут на карту.
+        myMap.geoObjects.add(multiRoute);
+    }
+
+    ymaps.ready(init);
+    </script>
+</html>

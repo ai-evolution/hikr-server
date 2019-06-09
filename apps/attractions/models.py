@@ -10,6 +10,8 @@ from ..django.middlewares import get_current_user
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
+from django.contrib.gis.db.models.functions import Distance as DistanceF
+from django.utils.text import slugify
 
 
 class Category(ManagementMixin):
@@ -17,6 +19,17 @@ class Category(ManagementMixin):
     name = models.CharField(
         max_length=255,
         unique=True,
+    )
+
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+    )
+
+    tag = models.ForeignKey(
+        "Tag",
+        on_delete=models.CASCADE,
+        related_name="categories"
     )
 
     description = models.TextField(
@@ -60,9 +73,19 @@ class Tag(ManagementMixin):
         unique=True,
     )
 
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+    )
+
     description = models.TextField(
         null=True,
         blank=True,
+    )
+
+    attention = models.BooleanField(
+        "Attention",
+        default=True,
     )
 
     def __str__(self):
@@ -71,27 +94,28 @@ class Tag(ManagementMixin):
 
 class Attraction(ManagementMixin):
 
+    node_id = models.BigIntegerField(
+        "OSM ID",
+        unique=True,
+    )
+
     name = models.CharField(
         max_length=2048,
     )
 
-    category = models.ForeignKey(
+    categories = models.ManyToManyField(
         Category,
-        on_delete=models.CASCADE,
-        null=True,
-    )
-
-    address = models.CharField(
-        max_length=2048,
-    )
-
-    description = models.TextField(
         null=True,
         blank=True,
     )
 
-    related = models.ManyToManyField(
-        "Attraction",
+    address = models.CharField(
+        max_length=2048,
+        null=True,
+        blank=True,
+    )
+
+    description = models.TextField(
         null=True,
         blank=True,
     )
@@ -105,6 +129,11 @@ class Attraction(ManagementMixin):
     user = models.ManyToManyField(
         User,
         through=UserAttraction,
+    )
+
+    attention = models.BooleanField(
+        "Attention",
+        default=False,
     )
 
     tags = models.ManyToManyField(
@@ -164,10 +193,13 @@ class Attraction(ManagementMixin):
             ua.save()
 
     @classmethod
-    def search(cls, tags, point):
-        print(point)
-        print(cls.objects.filter(point__isnull=False).first().point)
-        return cls.objects.filter(point__distance_lte=(point, Distance(km=3)))
+    def search(cls, tags, point, limit=100, distance=5):
+        filters = {
+            'point__distance_lte': (point, Distance(km=distance))
+        }
+        if tags.count() > 0:
+            filters['tags__in'] = tags
+        return cls.objects.filter(**filters).annotate(distance=DistanceF("point", point)).order_by('distance')[:limit]
 
     def __str__(self):
         return self.name
@@ -181,3 +213,9 @@ def get_coord(sender, instance, added=False, **kwargs):
         instance.point = Point(float(x), float(y))
     except Exception as e:
         print(e)
+
+
+@receiver(pre_save, sender=(Tag, Category),)
+def save_slug(sender, instance,  **kwargs):
+    print(instance)
+    instance.slug = slugify(instance.name)

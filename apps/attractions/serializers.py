@@ -2,17 +2,33 @@ from rest_framework import serializers
 from .models import *
 from drf_extra_fields.geo_fields import PointField
 
+
 __all__ = [
     'AttractionSerializer',
     'TagSerializer',
 ]
 
 
-class TagSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
         exclude = (
+            'created_date',
+            'updated_date',
+        )
+
+
+class TagSerializer(serializers.ModelSerializer):
+
+    # categories = CategorySerializer(many=True)
+
+    class Meta:
+        model = Tag
+        exclude = (
+            'attention',
+            'slug',
+            'description',
             'created_date',
             'updated_date',
         )
@@ -55,5 +71,3 @@ class AttractionSerializer(serializers.ModelSerializer):
             'created_date',
             'updated_date',
         )
-
-
