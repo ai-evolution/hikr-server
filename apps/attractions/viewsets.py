@@ -25,6 +25,7 @@ class AttractionViewset(viewsets.ModelViewSet):
         tags = Tag.objects.filter(id__in=[int(x) for x in self.request.GET.getlist('tag')])
         x = self.request.GET.get('x')
         y = self.request.GET.get('y')
+        limit = int(self.request.GET.get('limit', 100))
         if not x or not y:
             return Response(status=400, data="point not specify")
         try:
@@ -32,17 +33,19 @@ class AttractionViewset(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             return Response(status=400, data=e)
-        return Attraction.search(tags=tags, point=point, distance=int(self.request.GET.get('distance', 3)))
+        return Attraction.search(tags=tags, limit=limit, point=point, distance=int(self.request.GET.get('distance', 3)))
 
     def list(self, request, *args, **kwargs):
         qs = self.get_queryset()
         return Response(status=200, data={
-            "url": "{}?{}&{}".format(reverse('api:webview'), "&attraction=".join([str(x.id) for x in qs]),
-                                     urlencode({
-                                         "y": self.request.GET.get('y'),
-                                         "x": self.request.GET.get('x')})),
             "count": qs.count(),
             "objects": self.serializer_class(instance=qs, many=True).data,
+            "url": "{}?{}&{}".format(
+                reverse('api:webview'), "&attraction=".join([str(x.id) for x in qs]),
+                    urlencode({
+                        "y": self.request.GET.get('y'),
+                        "x": self.request.GET.get('x')
+                    })),
         })
 
     @action(detail=True, methods=["GET"])
